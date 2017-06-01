@@ -22,6 +22,9 @@ class Edge:
     """
     Base class for all Edge classes
     """
+    VMAX = 0.5
+    MACHINE_TIME_COST = 0.07
+
     def __init__(self, id_, vertices, *args):
         self.id = id_
         self.vertices = vertices
@@ -55,7 +58,7 @@ class LineSegmentEdge(Edge):
     def _cost(self):
         horizontal_distance = self.vertices[0].x - self.vertices[1].x
         vertical_distance = self.vertices[0].y - self.vertices[1].y
-        return (math.sqrt(horizontal_distance ** 2 + vertical_distance ** 2) / 0.5) * 0.07
+        return (math.sqrt(horizontal_distance ** 2 + vertical_distance ** 2) / self.VMAX) * self.MACHINE_TIME_COST
 
 
 class CircularArcEdge(Edge):
@@ -66,9 +69,29 @@ class CircularArcEdge(Edge):
         self.center_y = center_y
         self.clockwise_from = clockwise_from
 
+        if self.clockwise_from == self.vertices[0].id:
+            self.startpoint, self.endpoint = self.vertices[0], self.vertices[1]
+        else:
+            self.startpoint, self.endpoint = self.vertices[1], self.vertices[0]
+
     @classmethod
     def _create_from_schema(cls, key, value, vertices):
         return cls(key, vertices, value['Center']['X'], value['Center']['Y'], value['ClockwiseFrom'])
+
+    @property
+    def radius(self):
+        return math.sqrt((self.center_x - self.startpoint.x) ** 2 + (self.center_y - self.startpoint.y) ** 2)
+
+    @property
+    def circumference(self):
+        start_angle = math.atan2(self.startpoint.y - self.center_y, self.startpoint.x - self.center_x)
+        end_angle = math.atan2(self.endpoint.y - self.center_y, self.endpoint.x - self.center_x)
+        angle = start_angle - end_angle
+        return self.radius * angle
+
+    def _cost(self):
+        speed = self.VMAX * math.exp(-1/self.radius)
+        return (self.circumference / speed) * self.MACHINE_TIME_COST
 
 
 edge_mapping = {
