@@ -21,18 +21,19 @@ class Edge(object):
     """
     Base class for all Edge classes
     """
-    def __init__(self, id_, vertex_ids, *args):
+    def __init__(self, id_, vertices, *args):
         self.id = id_
-        self.vertex_ids = vertex_ids
+        self.vertices = vertices
 
     @classmethod
-    def create_from_schema(cls, key, value):
+    def create_from_schema(cls, key, value, all_vertices):
         """Creates an Edge based on a key-value pair from the schema"""
         class_type = edgefactory(value['Type'])
-        return class_type._create_from_schema(key, value)
+        vertices_for_edge = [all_vertices[str(k)] for k in value['Vertices']]
+        return class_type._create_from_schema(key, value, vertices_for_edge)
 
     @classmethod
-    def _create_from_schema(cls, key, value):
+    def _create_from_schema(cls, key, value, vertices):
         raise NotImplementedError("Subclass should implement this method.")
 
     def cost(self):
@@ -47,21 +48,21 @@ class LineSegmentEdge(Edge):
     """Represents a line segment edge"""
 
     @classmethod
-    def _create_from_schema(cls, key, value):
-        return cls(key, value['Vertices'])
+    def _create_from_schema(cls, key, value, vertices):
+        return cls(key, vertices)
 
 
 class CircularArcEdge(Edge):
     """Represents a circular arc edge"""
-    def __init__(self, id_, vertex_ids, center_x, center_y, clockwise_from):
-        super(CircularArcEdge, self).__init__(id_, vertex_ids)
+    def __init__(self, id_, vertices, center_x, center_y, clockwise_from):
+        super(CircularArcEdge, self).__init__(id_, vertices)
         self.center_x = center_x
         self.center_y = center_y
         self.clockwise_from = clockwise_from
 
     @classmethod
-    def _create_from_schema(cls, key, value):
-        return cls(key, value['Vertices'], value['Center']['X'], value['Center']['Y'], value['ClockwiseFrom'])
+    def _create_from_schema(cls, key, value, vertices):
+        return cls(key, vertices, value['Center']['X'], value['Center']['Y'], value['ClockwiseFrom'])
 
 
 edge_mapping = {
@@ -76,13 +77,11 @@ def edgefactory(edge_type):
 
 class Profile(object):
     """Represents an extrusion profile"""
-    def __init__(self, edges, vertices):
+    def __init__(self, edges):
         self.edges = {}
         self.vertices = {}
         for edge in edges:
             self.edges[edge.id] = edge
-        for vertex in vertices:
-            self.vertices[vertex.id] = vertex
 
     @classmethod
     def create_from_json(cls, filepath):
@@ -93,7 +92,6 @@ class Profile(object):
         vertices_json = profile_from_json['Vertices']
         edges_from_json = profile_from_json['Edges']
 
-        vertices = [Vertex.create_from_schema(k, v) for k, v in vertices_json.items()]
-        edges = [Edge.create_from_schema(k, v) for k, v in edges_from_json.items()]
-
-        return cls(edges, vertices)
+        all_vertices = {k: Vertex.create_from_schema(k, v) for k, v in vertices_json.items()}
+        edges = [Edge.create_from_schema(k, v, all_vertices) for k, v in edges_from_json.items()]
+        return cls(edges)
