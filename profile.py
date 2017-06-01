@@ -1,7 +1,8 @@
 import json
+import math
 
 
-class Vertex(object):
+class Vertex:
     """
     Represents a vertex
     """
@@ -17,7 +18,7 @@ class Vertex(object):
         return cls(key, position['X'], position['Y'])
 
 
-class Edge(object):
+class Edge:
     """
     Base class for all Edge classes
     """
@@ -41,7 +42,7 @@ class Edge(object):
         return self._cost()
 
     def _cost(self):
-        raise NotImplementedError("Subclass should implement this method.")
+        return 0
 
 
 class LineSegmentEdge(Edge):
@@ -51,11 +52,16 @@ class LineSegmentEdge(Edge):
     def _create_from_schema(cls, key, value, vertices):
         return cls(key, vertices)
 
+    def _cost(self):
+        horizontal_distance = self.vertices[0].x - self.vertices[1].x
+        vertical_distance = self.vertices[0].y - self.vertices[1].y
+        return (math.sqrt(horizontal_distance ** 2 + vertical_distance ** 2) / 0.5) * 0.07
+
 
 class CircularArcEdge(Edge):
     """Represents a circular arc edge"""
     def __init__(self, id_, vertices, center_x, center_y, clockwise_from):
-        super(CircularArcEdge, self).__init__(id_, vertices)
+        super().__init__(id_, vertices)
         self.center_x = center_x
         self.center_y = center_y
         self.clockwise_from = clockwise_from
@@ -75,7 +81,7 @@ def edgefactory(edge_type):
     return edge_mapping[edge_type]
 
 
-class Profile(object):
+class Profile:
     """Represents an extrusion profile"""
     def __init__(self, edges):
         self.edges = {}
@@ -87,8 +93,7 @@ class Profile(object):
     def create_from_json(cls, filepath):
         """Creates a Profile instance from a JSON file"""
         with open(filepath) as f:
-            json_string = f.read()
-            profile_from_json = json.loads(json_string)
+            profile_from_json = json.loads(f.read())
         vertices_json = profile_from_json['Vertices']
         edges_from_json = profile_from_json['Edges']
 
