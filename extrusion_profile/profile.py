@@ -45,5 +45,11 @@ class Profile:
 
 
 def estimate_cost(filepath):
+    """
+    Prints out the cost of the profile.
+
+    Takes a path to a file containing the profile definition according
+    to the schema.
+    """
     profile = Profile.create_from_json(filepath)
     print(profile.formatted_cost)

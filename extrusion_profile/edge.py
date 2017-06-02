@@ -150,6 +150,7 @@ class CircularArcEdge(Edge):
         return (self.circumference / speed) * self.MACHINE_TIME_COST
 
     def important_points(self):
+        """These are the important points to calculate the boundary box"""
         startpoint = (self.startpoint.x, self.startpoint.y)
         endpoint = (self.endpoint.x, self.endpoint.y)
         north = (self.center_x, self.center_y + self.radius)
@@ -159,6 +160,7 @@ class CircularArcEdge(Edge):
         return startpoint, endpoint, north, east, south, west
 
     def point_in_arc(self, x, y):
+        """Determines wheter a given (x, y) position is in the arc"""
         distance = math.sqrt((x - self.center_x) ** 2 + (y - self.center_y) ** 2)
         if within(distance, self.radius):
             angle = self.angle_at(x, y)
