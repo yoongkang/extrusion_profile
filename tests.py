@@ -1,5 +1,5 @@
 from unittest import TestCase
-from profile import Profile, LineSegmentEdge, Vertex, CircularArcEdge
+from extrusion_profile import Profile, LineSegmentEdge, Vertex, CircularArcEdge
 
 
 class TestProfile(TestCase):

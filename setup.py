@@ -15,4 +15,5 @@ setup(
     author_email="yoongkang.lim@gmail.com",
     description=("Project for Plethora coding challenge"),
     long_description=read('README.md'),
+    packages=['extrusion_profile'],
 )
