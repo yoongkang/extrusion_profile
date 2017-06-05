@@ -96,11 +96,9 @@ class LineSegmentEdge(Edge):
         return min([v.y for v in self.vertices])
 
 
-def within(a, b, epsilon=1e6):
+def within(a, b, epsilon=1e-6):
     """Returns True if number is within epsilon"""
-    if abs(a - b) <= epsilon:
-        return True
-    return False
+    return abs(a - b) <= epsilon
 
 
 class CircularArcEdge(Edge):
